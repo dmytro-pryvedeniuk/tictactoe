@@ -5,13 +5,17 @@ import GameOver from "./components/GameOver";
 import { useState } from "react";
 import { WINNING_COMBINATIONS } from "./components/winning-combinations";
 
-const INITIAL_PLAYERS = {
+
+const PLAYERS = {
   "X": "Player1",
   "O": "Player2"
 }
+const SYMBOLS = Object.keys(PLAYERS);
 
-function getActivePlayer(turns) {
-  return turns.length > 0 && turns[0].player === "X" ? "O" : "X";
+function getActiveSymbol(turns) {
+  return turns.length > 0 && turns[0].symbol === SYMBOLS[0]
+    ? SYMBOLS[1]
+    : SYMBOLS[0];
 }
 
 function getWinner(gameBoard, players) {
@@ -30,26 +34,24 @@ function getWinner(gameBoard, players) {
 }
 
 function getBoard(gameTurns) {
-  const INITIAL_GAME_BOARD = [
+  const gameBoard = [
     [null, null, null], // null, X, O
     [null, null, null],
     [null, null, null]
-  ]
-
-  const gameBoard = INITIAL_GAME_BOARD;
+  ];
   for (const turn of gameTurns) {
-    const { square, player } = turn;
+    const { square, symbol } = turn;
     const { row, col } = square;
-    gameBoard[row][col] = player;
+    gameBoard[row][col] = symbol;
   }
   return gameBoard;
 }
 
 export default function App() {
-  const [players, setPlayers] = useState(INITIAL_PLAYERS)
+  const [players, setPlayers] = useState(PLAYERS)
   const [gameTurns, setGameTurns] = useState([]);
 
-  let activePlayer = getActivePlayer(gameTurns);
+  let activeSymbol = getActiveSymbol(gameTurns);
 
   const gameBoard = getBoard(gameTurns);
   const winner = getWinner(gameBoard, players);
@@ -71,7 +73,7 @@ export default function App() {
   function handleSelectSquare(rowIndex, colIndex) {
 
     setGameTurns(prevTurns => {
-      let currentPlayer = getActivePlayer(prevTurns);
+      let activeSymbol = getActiveSymbol(prevTurns);
 
       const updatedTurns = [
         {
@@ -79,7 +81,7 @@ export default function App() {
             row: rowIndex,
             col: colIndex
           },
-          player: currentPlayer
+          symbol: activeSymbol
         },
         ...prevTurns
       ]
@@ -91,17 +93,16 @@ export default function App() {
   return <main>
     <div id="game-container">
       <ol id="players" className="highlight-player">
-        <Player
-          initialName={INITIAL_PLAYERS.X}
-          symbol="X"
-          isActive={activePlayer === "X"}
-          onNameChange={handlePlayerNameChange} />
-
-        <Player
-          initialName={INITIAL_PLAYERS.O}
-          symbol="O"
-          isActive={activePlayer === "O"}
-          onNameChange={handlePlayerNameChange} />
+        {
+          SYMBOLS.map(key =>
+            <Player
+              key={key}
+              initialName={players[key]}
+              symbol={key}
+              isActive={activeSymbol === key}
+              onNameChange={handlePlayerNameChange} />
+          )
+        }
       </ol>
       {(winner || hasDraw) && <GameOver winner={winner} onRestart={handleRestart} />}
       <GameBoard
